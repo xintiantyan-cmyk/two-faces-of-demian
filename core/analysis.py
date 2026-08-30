@@ -15,12 +15,11 @@ def analyze_text(text: str, paragraph_num: int) -> dict:
 
 def _split_text_by_chapter(text: str) -> list[str]:
     """Split the text into a list of chunks by chapter. Chapter headings are deleted in the process."""
-    header_regex = r'(?:^|\n)(?:(?:CHAPTER|Chapter)\s+(?:[0-9]+|[IVXLCDM]+)|[0-9]+\.\s+[A-Z\s]+|[IVXLCDM]+\.\s+[A-Z\s]+)'
-    chapters = re.split(header_regex, text)
-    for chapter in chapters:
-        chapter.strip()
-        if chapter == "":
-            chapters.remove(chapter)
+    number_words = r'(?:ZERO|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY)'
+    header_regex = rf'(?:\r?\n)+(?:CHAPTER|Chapter)\s+(?:[0-9]+|[IVXLCDM]+|{number_words})'
+
+    raw_chapters = re.split(header_regex, text, flags=re.IGNORECASE)
+    chapters = [c.strip() for c in raw_chapters if c.strip()]
     return chapters
 
 # def compare_chapters(text1: str, text2: str) -> pd.DataFrame:
@@ -45,7 +44,7 @@ def _count_paragraphs(text: str) -> int:
     paragraphs = [p for p in raw_paragraphs if p.strip()]
     return len(paragraphs)
 
-def analyze_book(text: str, title: str, author: str, published_year: int, translator: str, translation_year: int) -> pd.DataFrame:
+def analyze_book(text: str, title: str, author: str, published_year: int, translator: str, translation_year: int, has_chap_0: bool) -> pd.DataFrame:
     """Analyzes the given book text and returns a DataFrame with stylometric features for each chapter."""
     chapters = _split_text_by_chapter(text)
     chapter_results = []
@@ -54,7 +53,10 @@ def analyze_book(text: str, title: str, author: str, published_year: int, transl
         cleaned_chapter = chapter.strip() # Safe gaurd 
         if cleaned_chapter:
             result = analyze_text(cleaned_chapter, _count_paragraphs(chapter))
-            result["Chapter"] = f"Chapter {idx + 1}"
+            if has_chap_0:
+                result["Chapter"] = f"Chapter {idx}"
+            else:
+                result["Chapter"] = f"Chapter {idx + 1}"
             result["Title"] = title
             result["Author"] = author
             result["Published_Year"] = published_year
