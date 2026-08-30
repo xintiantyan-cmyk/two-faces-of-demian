@@ -1,4 +1,7 @@
+import nltk
 from nltk.tokenize import sent_tokenize, regexp_tokenize
+
+nltk.download('punkt_tab', quiet=True)
 
 # Functions for text analysis.
 # Features: 
