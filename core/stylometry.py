@@ -1,7 +1,9 @@
 import nltk
 from nltk.tokenize import sent_tokenize, regexp_tokenize
+from collections import Counter
 
 nltk.download('punkt_tab', quiet=True)
+nltk.download('punkt')
 
 # Functions for text analysis.
 # Features: 
@@ -9,7 +11,7 @@ nltk.download('punkt_tab', quiet=True)
 # - puncuation rates (count per 100 words), 
 # - type-token ratio (TTR) 
 # - function word distribution 
-# - paragraph-to-sentence ratio
+# - paragraph-to-sentence ratio (number of sentences per paragraph)
 
 def avg_sentence_length(text: str) -> float:
     """Calculate the average sentence length in words. The input text should be a pre-cleaned chunk of text.
@@ -18,7 +20,7 @@ def avg_sentence_length(text: str) -> float:
     """
     sentences = sent_tokenize(text)  
     sentence_num = len(sentences)
-    words = regexp_tokenize(text, r"\b\w+(?:'\w+)?\b", gaps=False)
+    words = regexp_tokenize(text, r"\b\w+(?:['’]\w+)?\b", gaps=False)
 
     if sentence_num > 0:
         return len(words) / sentence_num
@@ -27,18 +29,29 @@ def avg_sentence_length(text: str) -> float:
 
 def punctuation_count(text: str) -> dict[str, int]:
     """Count the number of punctuation marks in the text."""
-    punctuation_marks = ['.', ',', '!', '?', ';', ':', '"', "'", "...", "--"]
-    result = {}
-    for punctuation in punctuation_marks:
-        count = text.count(punctuation)
-        result[punctuation] = count
-    return result
+    # punctuation_marks = ['.', ',', '!', '?', ';', ':', '"', "'", "...", "--"]
+    TARGET_PUNCTUATION = {'.', ',', '!', '?', ';', ':', '"', "'", '...', '--', "''", '``'}
+
+    tokens = nltk.word_tokenize(text)
+    
+    filtered_tokens = []
+    for token in tokens:
+        # Standardize NLTK open/close double quotes
+        if token == "''" or token == "``" or token == "“" or token == "”":
+            filtered_tokens.append('"')
+        # Standardize curly single quotes/apostrophes
+        elif token == "’" or token == "‘":
+            filtered_tokens.append("'")
+        elif token in TARGET_PUNCTUATION:
+            filtered_tokens.append(token)
+    return dict(Counter(filtered_tokens))
 
 def punctuation_rate_per_1000_words(text:str) -> dict[str, float]:
     """Calculate the rate of punctuation marks per 1000 words in the text."""
     punctuation_counts = punctuation_count(text)
-    words = regexp_tokenize(text, r"\b\w+(?:'\w+)?\b", gaps=False)
+    words = regexp_tokenize(text, r"\b\w+(?:['’]\w+)?\b", gaps=False)
     word_count = len(words)
+    print(f"Word count: {word_count}")
 
     if word_count == 0:
         return {punctuation: 0.0 for punctuation in punctuation_counts}
@@ -53,8 +66,16 @@ def typeTokenRatio(text: str) -> float:
     """Calculate the type-token ratio (TTR) of the text. The input text should be a pre-cleaned chunk of text.
     Formula: TTR = number of unique words / total number of words
     """
-    words = regexp_tokenize(text, r"\b\w+(?:'\w+)?\b", gaps=False)
-    return len(set(words)) / len(words)
+    words = regexp_tokenize(text, r"\b\w+(?:['’]\w+)?\b", gaps=False)
+
+    if len(words) == 0:
+        return 0.0
+    cleaned_words  = []
+
+    for word in words:
+        cleaned_word = word.lower()
+        cleaned_words.append(cleaned_word)
+    return len(set(cleaned_words)) / len(cleaned_words)
 
 def function_word_distribution(text: str) -> float:
     """Calculate the Relative frequency of function words in the text. The input text should be a pre-cleaned text.
@@ -65,7 +86,7 @@ def function_word_distribution(text: str) -> float:
     above but inside of someone used
     after by into off something via
     all can is on such we
-    although fucos it once than what
+    although it once than what
     am do its one that whatever
     among down latter onto the when
     an each less opposite their where
@@ -87,7 +108,7 @@ def function_word_distribution(text: str) -> float:
     beside if none so up your
     """
     function_words_list = function_words.split()
-    words = regexp_tokenize(text, r"\b\w+(?:'\w+)?\b", gaps=False)
+    words = regexp_tokenize(text, r"\b\w+(?:['’]\w+)?\b", gaps=False)
     count = 0
 
     for word in words:
@@ -100,7 +121,7 @@ def function_word_distribution(text: str) -> float:
 
 def paragraph_to_sentence_ratio(text: str, paragraph_num: int) -> float:
     """Calculate the paragraph-to-sentence ratio of the text. The input text should be a pre-cleaned chunk of text.
-    Formula: paragraph-to-sentence-ration = number of sentences / number of paragraphs 
+    Formula: paragraph-to-sentence-ratio = number of sentences / number of paragraphs 
     """
     sentences = sent_tokenize(text)  
     if paragraph_num > 0:

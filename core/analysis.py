@@ -16,10 +16,28 @@ def analyze_text(text: str, paragraph_num: int) -> dict:
 def _split_text_by_chapter(text: str) -> list[str]:
     """Split the text into a list of chunks by chapter. Chapter headings are deleted in the process."""
     number_words = r'(?:ZERO|ONE|TWO|THREE|FOUR|FIVE|SIX|SEVEN|EIGHT|NINE|TEN|ELEVEN|TWELVE|THIRTEEN|FOURTEEN|FIFTEEN|SIXTEEN|SEVENTEEN|EIGHTEEN|NINETEEN|TWENTY)'
-    header_regex = rf'(?:\r?\n)+(?:CHAPTER|Chapter)\s+(?:[0-9]+|[IVXLCDM]+|{number_words})'
+    header_pattern = rf'(?:\r?\n|^)\s*(?:CHAPTER|Chapter)\s+(?:[0-9]+|[IVXLCDM]+|{number_words})[^\r\n]*'
 
-    raw_chapters = re.split(header_regex, text, flags=re.IGNORECASE)
-    chapters = [c.strip() for c in raw_chapters if c.strip()]
+    # Find the start positions of all chapter headings
+    matches = list(re.finditer(header_pattern, text, flags=re.IGNORECASE))
+    
+    if not matches:
+        return [text.strip()]
+
+    chapters = []
+    for i in range(len(matches)):
+        start_pos = matches[i].end()  # Start AFTER the heading text
+        
+        # If it's the last chapter, read to the end of the text; otherwise, read up to the next match
+        if i + 1 < len(matches):
+            end_pos = matches[i + 1].start()
+        else:
+            end_pos = len(text)
+            
+        chapter_content = text[start_pos:end_pos].strip()
+        if chapter_content:
+            chapters.append(chapter_content)
+
     return chapters
 
 # def compare_chapters(text1: str, text2: str) -> pd.DataFrame:
