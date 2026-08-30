@@ -2,7 +2,7 @@ import core.stylometry as stylometry
 import pandas as pd
 import regex as re
 
-def analyze_text(text: str, paragraph_num: int) -> dict:
+def _analyze_text(text: str, paragraph_num: int) -> dict:
     """Analyze the text and return a dictionary of stylometric features."""
     analysis_results = {
         "Average_Sentence_Length": stylometry.avg_sentence_length(text),
@@ -40,26 +40,13 @@ def _split_text_by_chapter(text: str) -> list[str]:
 
     return chapters
 
-# def compare_chapters(text1: str, text2: str) -> pd.DataFrame:
-#     """Compares the stylometric features of the given two texts. Results are returned as a Pandas DataFrame."""
-#     result1 = analyze_text(text1.strip(), _count_paragraphs(text1))
-#     result2 = analyze_text(text2.strip(), _count_paragraphs(text2))
-
-#     text1_metrics = result1.copy()
-#     text1_metrics["Chapter"] = "Chapter 1"
-
-#     text2_metrics = result2.copy()
-#     text2_metrics["Chapter"] = "Chapter 2"
-
-#     comparison_df = pd.DataFrame([text1_metrics, text2_metrics])
-#     return comparison_df
-
 def _count_paragraphs(text: str) -> int:
     """Counts the number of paragraphs in the given text."""
     if text.strip() == "":
         return 0
     raw_paragraphs = text.split("\n\n")
     paragraphs = [p for p in raw_paragraphs if p.strip()]
+    print(len(paragraphs))
     return len(paragraphs)
 
 def analyze_book(text: str, title: str, author: str, published_year: int, translator: str, translation_year: int, has_chap_0: bool) -> pd.DataFrame:
@@ -70,7 +57,7 @@ def analyze_book(text: str, title: str, author: str, published_year: int, transl
     for idx, chapter in enumerate(chapters):
         cleaned_chapter = chapter.strip() # Safe gaurd 
         if cleaned_chapter:
-            result = analyze_text(cleaned_chapter, _count_paragraphs(chapter))
+            result = _analyze_text(cleaned_chapter, _count_paragraphs(chapter))
             if has_chap_0:
                 result["Chapter"] = f"Chapter {idx}"
             else:

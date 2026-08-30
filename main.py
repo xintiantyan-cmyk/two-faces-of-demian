@@ -20,3 +20,18 @@ if __name__ == "__main__":
 
     # Save the book profile
     save_book_profile(book_profile_df, "data/processed/Demian-Priday.csv")
+
+    text_loader = TextLoader("data/raw/Demian-Searls-cleaned.txt")
+    book_text_2 = text_loader.load_text()
+
+    book_profile_df_2 = analysis.analyze_book(
+            book_text_2,
+            "Demian: The Story of Emil Sinclair's Youth",
+            "Hermann Hesse",
+            1919,
+            "Damion Searls",
+            2013,
+            True
+        )
+
+    save_book_profile(book_profile_df_2, "data/processed/Demian-Searls.csv")

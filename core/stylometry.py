@@ -1,5 +1,5 @@
 import nltk
-from nltk.tokenize import sent_tokenize, regexp_tokenize
+from nltk.tokenize import sent_tokenize, regexp_tokenize, word_tokenize
 from collections import Counter
 
 nltk.download('punkt_tab', quiet=True)
@@ -18,9 +18,9 @@ def avg_sentence_length(text: str) -> float:
     Note that words like "don't" and "it's" are counted as single words, while hyphenated words like "well-being" are counted as two words.
     Formula: average sentence length = total number of words / total number of sentences
     """
-    sentences = sent_tokenize(text)  
+    sentences = _tokenize_sentences(text)  
     sentence_num = len(sentences)
-    words = regexp_tokenize(text, r"\b\w+(?:['’]\w+)?\b", gaps=False)
+    words = _extract_words(text)
 
     if sentence_num > 0:
         return len(words) / sentence_num
@@ -32,7 +32,7 @@ def punctuation_count(text: str) -> dict[str, int]:
     # punctuation_marks = ['.', ',', '!', '?', ';', ':', '"', "'", "...", "--"]
     TARGET_PUNCTUATION = {'.', ',', '!', '?', ';', ':', '"', "'", '...', '--', "''", '``'}
 
-    tokens = nltk.word_tokenize(text)
+    tokens = word_tokenize(text)
     
     filtered_tokens = []
     for token in tokens:
@@ -42,6 +42,11 @@ def punctuation_count(text: str) -> dict[str, int]:
         # Standardize curly single quotes/apostrophes
         elif token == "’" or token == "‘":
             filtered_tokens.append("'")
+        # Handle em-dash and en-dash and different formatting of dashes
+        elif token == "-" or token == "----" or token == "—" or token == "–":
+            filtered_tokens.append("--")
+        elif token == "...":
+            filtered_tokens.append("...")
         elif token in TARGET_PUNCTUATION:
             filtered_tokens.append(token)
     return dict(Counter(filtered_tokens))
@@ -49,7 +54,7 @@ def punctuation_count(text: str) -> dict[str, int]:
 def punctuation_rate_per_1000_words(text:str) -> dict[str, float]:
     """Calculate the rate of punctuation marks per 1000 words in the text."""
     punctuation_counts = punctuation_count(text)
-    words = regexp_tokenize(text, r"\b\w+(?:['’]\w+)?\b", gaps=False)
+    words = _extract_words(text)
     word_count = len(words)
     print(f"Word count: {word_count}")
 
@@ -66,7 +71,7 @@ def typeTokenRatio(text: str) -> float:
     """Calculate the type-token ratio (TTR) of the text. The input text should be a pre-cleaned chunk of text.
     Formula: TTR = number of unique words / total number of words
     """
-    words = regexp_tokenize(text, r"\b\w+(?:['’]\w+)?\b", gaps=False)
+    words = _extract_words(text)
 
     if len(words) == 0:
         return 0.0
@@ -108,7 +113,7 @@ def function_word_distribution(text: str) -> float:
     beside if none so up your
     """
     function_words_list = function_words.split()
-    words = regexp_tokenize(text, r"\b\w+(?:['’]\w+)?\b", gaps=False)
+    words = _extract_words(text)
     count = 0
 
     for word in words:
@@ -123,8 +128,25 @@ def paragraph_to_sentence_ratio(text: str, paragraph_num: int) -> float:
     """Calculate the paragraph-to-sentence ratio of the text. The input text should be a pre-cleaned chunk of text.
     Formula: paragraph-to-sentence-ratio = number of sentences / number of paragraphs 
     """
-    sentences = sent_tokenize(text)  
+    sentences = _tokenize_sentences(text)  
     if paragraph_num > 0:
         return len(sentences) / paragraph_num
     else:
         return 0.0
+
+def _tokenize_sentences(text: str) -> list[str]:
+    """Splits cleaned text into sentences paragraph by paragraph"""
+    sentences = []
+    # Split by double newlines so sentence boundaries aren't broken by line wraps
+    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+    
+    for paragraph in paragraphs:
+        # Replace intra-paragraph single newlines with spaces before tokenizing
+        clean_para = " ".join(paragraph.splitlines())
+        sentences.extend(sent_tokenize(clean_para))
+        
+    return sentences
+
+def _extract_words(text: str) -> list[str]:
+    """Helper to maintain consistent word tokenization across all metrics."""
+    return regexp_tokenize(text, r"\b\w+(?:['’]\w+)?\b", gaps=False)
