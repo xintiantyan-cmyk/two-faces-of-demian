@@ -27,10 +27,10 @@ def avg_sentence_length(text: str) -> float:
     else:
         return 0.0
 
-def punctuation_count(text: str) -> dict[str, int]:
+def _punctuation_count(text: str) -> dict[str, int]:
     """Count the number of punctuation marks in the text."""
     # punctuation_marks = ['.', ',', '!', '?', ';', ':', '"', "'", "...", "--"]
-    TARGET_PUNCTUATION = {'.', ',', '!', '?', ';', ':', '"', "'", '...', '--', "''", '``'}
+    TARGET_PUNCTUATIONS = ['.', ',', '!', '?', ';', ':', '"', "'", '...', '--']
 
     tokens = word_tokenize(text)
     
@@ -47,27 +47,54 @@ def punctuation_count(text: str) -> dict[str, int]:
             filtered_tokens.append("--")
         elif token == "...":
             filtered_tokens.append("...")
-        elif token in TARGET_PUNCTUATION:
+        elif token in TARGET_PUNCTUATIONS:
             filtered_tokens.append(token)
-    return dict(Counter(filtered_tokens))
+
+    punctuations = {}
+    for punctuation in TARGET_PUNCTUATIONS:
+        punctuations[punctuation] = 0
+
+    actual_punctuations = Counter(filtered_tokens)
+    for punc, count in actual_punctuations.items():
+        punctuations[punc] = count
+
+    return punctuations
 
 def punctuation_rate_per_1000_words(text:str) -> dict[str, float]:
     """Calculate the rate of punctuation marks per 1000 words in the text."""
-    punctuation_counts = punctuation_count(text)
+    punctuation_counts = _punctuation_count(text)
     words = _extract_words(text)
     word_count = len(words)
-    print(f"Word count: {word_count}")
 
-    if word_count == 0:
-        return {punctuation: 0.0 for punctuation in punctuation_counts}
+    PUNCTUATION_LABEL_MAP = {
+        '.': 'Period',
+        ',': 'Comma',
+        '!': 'Exclamation',
+        '?': 'Question',
+        ';': 'Semicolon',
+        ':': 'Colon',
+        '"': 'DoubleQuote',
+        "'": 'SingleQuote',
+        '...': 'Ellipsis',
+        '--': 'Dash'
+    }
+    print(f"Word count: {word_count}")
 
     punctuation_rates = {}
 
+    if word_count == 0:
+        for symbol in punctuation_counts:
+            label = PUNCTUATION_LABEL_MAP.get(symbol, symbol)
+            column_name = "Punctuation_Rate_" + label
+            punctuation_rates[column_name] = 0.0
+        return punctuation_rates
+
     for punctuation, count in punctuation_counts.items():
-        punctuation_rates[punctuation] = (count / word_count) * 1000
+        label = PUNCTUATION_LABEL_MAP.get(punctuation, punctuation)
+        punctuation_rates["Punctuation_Rate_" + label] = (count / word_count) * 1000
     return punctuation_rates
 
-def typeTokenRatio(text: str) -> float:
+def type_token_ratio(text: str) -> float:
     """Calculate the type-token ratio (TTR) of the text. The input text should be a pre-cleaned chunk of text.
     Formula: TTR = number of unique words / total number of words
     """

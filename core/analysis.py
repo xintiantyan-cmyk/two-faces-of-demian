@@ -5,12 +5,17 @@ import regex as re
 def _analyze_text(text: str, paragraph_num: int) -> dict:
     """Analyze the text and return a dictionary of stylometric features."""
     analysis_results = {
+        "Type_Token_Ratio": stylometry.type_token_ratio(text),
         "Average_Sentence_Length": stylometry.avg_sentence_length(text),
-        "Punctuation_Rate_per_1000_Words": stylometry.punctuation_rate_per_1000_words(text),
-        "Type_Token_Ratio": stylometry.typeTokenRatio(text),
         "Function_Word_Distribution": stylometry.function_word_distribution(text),
         "Paragraph_to_Sentence_Ratio": stylometry.paragraph_to_sentence_ratio(text, paragraph_num)
     }
+
+    # Flatten the punctuation rates dictionary
+    punctuation_rates = stylometry.punctuation_rate_per_1000_words(text)
+    for punctuation, rate in punctuation_rates.items():
+        analysis_results[punctuation] = rate
+
     return analysis_results
 
 def _split_text_by_chapter(text: str) -> list[str]:
