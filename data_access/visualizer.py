@@ -52,6 +52,23 @@ class TranslationData:
         return long
 
     def function_words_long(self):
+        """Reshape function-word frequency columns into long form with two rankings.
+
+        The profile CSV stores each function word's relative frequency
+        (occurrences / total words) in its own ``Function_Word_Freq_<word>``
+        column. This method melts those columns into one row per (chapter,
+        translation, word) and attaches two ranks:
+
+        - ``Rank`` — per-translation rank: each word's mean relative frequency,
+          averaged over that translation's nine chapters, ranked descending
+          (rank 1 = most frequent). Used by the "Separate charts" view.
+        - ``Global_Rank`` — overall rank across both translations and all
+          chapters (rank 1 = most frequent overall). Used by the "Compare in
+          one chart" view.
+
+        The dashboard's default "top 5" is simply the five words with the
+        lowest rank (1-5) for whichever ranking the active view uses.
+        """
         df = self.profile()
         cols = [c for c in df.columns if c.startswith("Function_Word_Freq_")]
         long = df.melt(
