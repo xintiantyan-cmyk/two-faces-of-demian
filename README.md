@@ -190,6 +190,9 @@ Raw text files are gitignored for copyright reasons. Drop your own pre-cleaned `
 ---
 
 ## 📈 Sample Dashboard Views
+<img width="1330" height="442" alt="Screenshot 2026-10-04 at 6 40 19 PM" src="https://github.com/user-attachments/assets/be2b66de-db45-46cb-bdbe-f031017e9ef6" />
+
+<img width="1349" height="562" alt="Screenshot 2026-10-04 at 6 40 43 PM" src="https://github.com/user-attachments/assets/c419e7fc-27da-45a0-908d-9ca4c7cbd00b" />
 
 ---
 
