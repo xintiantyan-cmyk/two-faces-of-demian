@@ -7,7 +7,6 @@ def _analyze_text(text: str, paragraph_num: int) -> dict:
     analysis_results = {
         "Type_Token_Ratio": stylometry.type_token_ratio(text),
         "Average_Sentence_Length": stylometry.avg_sentence_length(text),
-        "Function_Word_Distribution": stylometry.function_word_distribution(text),
         "Paragraph_to_Sentence_Ratio": stylometry.paragraph_to_sentence_ratio(text, paragraph_num)
     }
 
@@ -15,6 +14,11 @@ def _analyze_text(text: str, paragraph_num: int) -> dict:
     punctuation_rates = stylometry.punctuation_rate_per_1000_words(text)
     for punctuation, rate in punctuation_rates.items():
         analysis_results[punctuation] = rate
+
+    # Flatten the per-word function word frequencies dictionary
+    function_word_freqs = stylometry.function_word_distribution(text)
+    for column, freq in function_word_freqs.items():
+        analysis_results[column] = freq
 
     return analysis_results
 

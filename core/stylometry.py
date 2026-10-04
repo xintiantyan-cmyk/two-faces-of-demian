@@ -109,7 +109,7 @@ def type_token_ratio(text: str) -> float:
         cleaned_words.append(cleaned_word)
     return len(set(cleaned_words)) / len(cleaned_words)
 
-def function_word_distribution(text: str) -> float:
+def function_word_distribution(text: str) -> dict[str, float]:
     """Calculate the Relative frequency of function words in the text. The input text should be a pre-cleaned text.
     Formula: Relative frequency of function words = number of function words / total number of words
     """
@@ -141,15 +141,12 @@ def function_word_distribution(text: str) -> float:
     """
     function_words_list = function_words.split()
     words = _extract_words(text)
-    count = 0
+    total = len(words)
+    if total == 0:
+        return {f"Function_Word_Freq_{word}": 0.0 for word in sorted(set(function_words_list))}
 
-    for word in words:
-        if word.lower() in function_words_list:
-            count += 1
-
-    if len(words) == 0:
-        return 0.0
-    return count / len(words) 
+    counts = Counter(word.lower() for word in words if word.lower() in function_words_list)
+    return {f"Function_Word_Freq_{word}": counts[word] / total for word in sorted(set(function_words_list))}
 
 def paragraph_to_sentence_ratio(text: str, paragraph_num: int) -> float:
     """Calculate the paragraph-to-sentence ratio of the text. The input text should be a pre-cleaned chunk of text.
